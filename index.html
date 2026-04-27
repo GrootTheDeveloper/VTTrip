@@ -60,7 +60,7 @@
             { id: 13, name: 'Bánh bông lan', payer: 'Long', amount: 185000, excluded: ['Hoàng', 'Khang', 'Tân', 'Phúc', 'Siêu'], custom: {}, note: 'Trâm Anh và Kha chia' },
             { id: 14, name: 'Trà sữa', payer: 'Long', amount: 135000, excluded: ['Kha', 'Khang'], custom: { 'Hoàng': 25000 }, note: 'Hoàng 25k, còn lại chia 5' },
             { id: 15, name: 'Tiền donut', payer: 'Tân', amount: 0, excluded: [], custom: {}, note: 'Chưa có giá' },
-            { id: 16, name: 'Tiền xe về', payer: 'Trâm Anh', amount: 800000, excluded: ['Tân', 'Phúc', 'Kha'], custom: {}, note: 'Chia 5' },
+            { id: 16, name: 'Tiền xe về', payer: 'Tân', amount: 800000, excluded: ['Tân', 'Phúc', 'Kha'], custom: {}, note: 'Chia 5' },
         ];
 
         function App() {
@@ -128,12 +128,62 @@
                 return results.sort((a, b) => a.type === 'pay_banker' ? -1 : 1);
             }, [balances]);
 
+            // THÊM MỚI: Logic tính toán chi tiết minh bạch cho từng người
+            const detailedBreakdown = useMemo(() => {
+                const breakdown = {};
+                PEOPLE.forEach(p => {
+                    breakdown[p] = {
+                        consumed: [], // các khoản phải trả (đã tiêu)
+                        paid: [],     // các khoản đã ứng tiền trả
+                        totalConsumed: 0,
+                        totalPaid: 0
+                    };
+                });
+
+                expenses.forEach(exp => {
+                    if (exp.amount <= 0) return;
+
+                    // 1. Ghi nhận người đã ứng tiền
+                    breakdown[exp.payer].paid.push({ name: exp.name, amount: exp.amount });
+                    breakdown[exp.payer].totalPaid += exp.amount;
+
+                    // 2. Ghi nhận người tiêu dùng (phải trả tiền)
+                    let remainingAmount = exp.amount;
+                    let participantsPool = PEOPLE.filter(p => !exp.excluded.includes(p));
+
+                    // Xử lý các khoản có giá cố định trước
+                    if (Object.keys(exp.custom).length > 0) {
+                        Object.entries(exp.custom).forEach(([person, specificAmount]) => {
+                            breakdown[person].consumed.push({ name: exp.name + " (Riêng)", amount: specificAmount });
+                            breakdown[person].totalConsumed += specificAmount;
+                            remainingAmount -= specificAmount;
+                            participantsPool = participantsPool.filter(p => p !== person);
+                        });
+                    }
+
+                    // Chia đều phần còn lại
+                    if (participantsPool.length > 0) {
+                        const splitAmount = remainingAmount / participantsPool.length;
+                        participantsPool.forEach(person => {
+                            breakdown[person].consumed.push({ name: exp.name, amount: splitAmount });
+                            breakdown[person].totalConsumed += splitAmount;
+                        });
+                    }
+                });
+
+                return breakdown;
+            }, [expenses]);
+
             const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+            // THÊM MỚI: Trạng thái Tab hiện tại đang mở
+            const [activeTab, setActiveTab] = useState('overview');
 
             return (
                 <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800">
-                    <div className="max-w-5xl mx-auto space-y-6">
+                    <div className="max-w-6xl mx-auto space-y-6">
                         
+                        {/* Header */}
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8 text-center">
                             <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-3">
                                 <IconCalculator className="text-blue-600" size={32} />
@@ -142,141 +192,237 @@
                             <p className="text-slate-500">Mọi khoản thu chi sẽ được cấn trừ và chuyển về một mối duy nhất là <strong className="text-blue-600">Duy Kha</strong>.</p>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            
-                            <div className="lg:col-span-2 space-y-6">
-                                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                                    <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                                        <h2 className="text-lg font-semibold flex items-center gap-2">
-                                            <IconReceipt className="text-indigo-500" size={20} />
-                                            Bảng Kê Chi Tiết
-                                        </h2>
-                                        <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
-                                            Tổng: {formatMoney(totalSpent)}
-                                        </span>
-                                    </div>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="text-xs text-slate-500 uppercase bg-slate-50">
-                                                <tr>
-                                                    <th className="px-4 py-3 font-medium">STT</th>
-                                                    <th className="px-4 py-3 font-medium">Khoản chi</th>
-                                                    <th className="px-4 py-3 font-medium">Người trả</th>
-                                                    <th className="px-4 py-3 font-medium text-right">Số tiền</th>
-                                                    <th className="px-4 py-3 font-medium">Ghi chú</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {expenses.map((exp, index) => (
-                                                    <tr key={exp.id} className="hover:bg-slate-50/50 transition-colors">
-                                                        <td className="px-4 py-3 font-medium text-slate-400">{index + 1}</td>
-                                                        <td className="px-4 py-3 font-medium text-slate-700">{exp.name}</td>
-                                                        <td className="px-4 py-3">
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                                                {exp.payer}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-right font-medium">
-                                                            {editingId === exp.id ? (
-                                                                <div className="flex items-center justify-end gap-2">
-                                                                    <input 
-                                                                        type="number" 
-                                                                        className="w-28 px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                                        value={editAmount}
-                                                                        onChange={(e) => setEditAmount(e.target.value)}
-                                                                        autoFocus
-                                                                        placeholder="Nhập số tiền"
-                                                                    />
-                                                                    <button 
-                                                                        onClick={() => handleSaveAmount(exp.id)}
-                                                                        className="p-1.5 text-green-600 hover:bg-green-50 rounded"
-                                                                    >
-                                                                        <IconSave size={16} />
-                                                                    </button>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex items-center justify-end gap-2 group cursor-pointer" onClick={() => {
-                                                                    setEditingId(exp.id);
-                                                                    setEditAmount(exp.amount === 0 ? '' : exp.amount);
-                                                                }}>
-                                                                    <span className={exp.amount === 0 ? 'text-rose-500 font-semibold' : 'text-slate-800'}>
-                                                                        {exp.amount === 0 ? 'Chưa cập nhật' : formatMoney(exp.amount)}
-                                                                    </span>
-                                                                    <IconEdit2 size={14} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-xs text-slate-500 truncate max-w-[150px]" title={exp.note}>
-                                                            {exp.note}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg p-1">
-                                    <div className="bg-white rounded-xl p-5 h-full">
-                                        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                                            <IconArrowRightLeft className="text-blue-600" size={22} />
-                                            Thanh Toán Cuối Cùng
-                                        </h2>
-                                        
-                                        <div className="space-y-3">
-                                            {transfers.length === 0 ? (
-                                                <div className="text-center py-6 text-slate-500">
-                                                    Mọi người đã hòa tiền, không cần chuyển khoản!
-                                                </div>
-                                            ) : (
-                                                transfers.map((t, i) => (
-                                                    <div 
-                                                        key={i} 
-                                                        className={`flex items-center justify-between p-3 rounded-lg border ${
-                                                            t.type === 'pay_banker' 
-                                                                ? 'bg-rose-50 border-rose-100' 
-                                                                : 'bg-emerald-50 border-emerald-100'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="font-semibold text-slate-700">{t.from}</span>
-                                                            <IconArrowRightLeft size={14} className="text-slate-400" />
-                                                            <span className="font-semibold text-slate-700">{t.to}</span>
-                                                        </div>
-                                                        <span className={`font-bold ${t.type === 'pay_banker' ? 'text-rose-600' : 'text-emerald-600'}`}>
-                                                            {formatMoney(t.amount)}
-                                                        </span>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                        
-                                        <div className="mt-5 p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm text-blue-800 text-center">
-                                            Tất cả giao dịch được cấn trừ và chuyển về tài khoản của <strong>Duy Kha</strong>.
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
-                                    <h3 className="text-md font-semibold text-slate-800 flex items-center gap-2 mb-4">
-                                        <IconUsers className="text-slate-500" size={18} />
-                                        Chi Tiết Cấn Trừ Cá Nhân
-                                    </h3>
-                                    <div className="space-y-2 text-sm">
-                                        {PEOPLE.map(person => (
-                                            <div key={person} className="flex justify-between items-center py-1.5 border-b border-slate-50 last:border-0">
-                                                <span className="text-slate-600 font-medium">{person}</span>
-                                                <span className={`font-semibold ${balances[person] > 0 ? 'text-emerald-500' : balances[person] < 0 ? 'text-rose-500' : 'text-slate-400'}`}>
-                                                    {balances[person] > 0 ? '+' : ''}{formatMoney(balances[person])}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                        {/* Thanh Tab Navigation */}
+                        <div className="flex justify-center flex-wrap gap-2 md:gap-4 bg-white p-2 rounded-xl shadow-sm border border-slate-100">
+                            <button 
+                                onClick={() => setActiveTab('overview')}
+                                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${activeTab === 'overview' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                            >
+                                <IconReceipt size={18} />
+                                Bảng Kê & Thanh Toán
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('breakdown')}
+                                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${activeTab === 'breakdown' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                            >
+                                <IconUsers size={18} />
+                                Chi Tiết Từng Người
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('balances')}
+                                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${activeTab === 'balances' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                            >
+                                <IconArrowRightLeft size={18} />
+                                Cấn Trừ Cá Nhân
+                            </button>
                         </div>
+
+                        {/* TAB 1: Bảng Kê & Thanh Toán */}
+                        {activeTab === 'overview' && (
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-2 space-y-6">
+                                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                                        <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                            <h2 className="text-lg font-semibold flex items-center gap-2">
+                                                <IconReceipt className="text-indigo-500" size={20} />
+                                                Bảng Kê Chi Tiết
+                                            </h2>
+                                            <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
+                                                Tổng: {formatMoney(totalSpent)}
+                                            </span>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm text-left">
+                                                <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+                                                    <tr>
+                                                        <th className="px-4 py-3 font-medium">STT</th>
+                                                        <th className="px-4 py-3 font-medium">Khoản chi</th>
+                                                        <th className="px-4 py-3 font-medium">Người trả</th>
+                                                        <th className="px-4 py-3 font-medium text-right">Số tiền</th>
+                                                        <th className="px-4 py-3 font-medium">Ghi chú</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {expenses.map((exp, index) => (
+                                                        <tr key={exp.id} className="hover:bg-slate-50/50 transition-colors">
+                                                            <td className="px-4 py-3 font-medium text-slate-400">{index + 1}</td>
+                                                            <td className="px-4 py-3 font-medium text-slate-700">{exp.name}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                                                                    {exp.payer}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right font-medium">
+                                                                {editingId === exp.id ? (
+                                                                    <div className="flex items-center justify-end gap-2">
+                                                                        <input 
+                                                                            type="number" 
+                                                                            className="w-28 px-2 py-1 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                            value={editAmount}
+                                                                            onChange={(e) => setEditAmount(e.target.value)}
+                                                                            autoFocus
+                                                                            placeholder="Nhập số tiền"
+                                                                        />
+                                                                        <button 
+                                                                            onClick={() => handleSaveAmount(exp.id)}
+                                                                            className="p-1.5 text-green-600 hover:bg-green-50 rounded"
+                                                                        >
+                                                                            <IconSave size={16} />
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex items-center justify-end gap-2 group cursor-pointer" onClick={() => {
+                                                                        setEditingId(exp.id);
+                                                                        setEditAmount(exp.amount === 0 ? '' : exp.amount);
+                                                                    }}>
+                                                                        <span className={exp.amount === 0 ? 'text-rose-500 font-semibold' : 'text-slate-800'}>
+                                                                            {exp.amount === 0 ? 'Chưa cập nhật' : formatMoney(exp.amount)}
+                                                                        </span>
+                                                                        <IconEdit2 size={14} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-xs text-slate-500 truncate max-w-[150px]" title={exp.note}>
+                                                                {exp.note}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg p-1 h-full">
+                                        <div className="bg-white rounded-xl p-5 h-full">
+                                            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                                                <IconArrowRightLeft className="text-blue-600" size={22} />
+                                                Thanh Toán Cuối Cùng
+                                            </h2>
+                                            
+                                            <div className="space-y-3">
+                                                {transfers.length === 0 ? (
+                                                    <div className="text-center py-6 text-slate-500">
+                                                        Mọi người đã hòa tiền, không cần chuyển khoản!
+                                                    </div>
+                                                ) : (
+                                                    transfers.map((t, i) => (
+                                                        <div 
+                                                            key={i} 
+                                                            className={`flex items-center justify-between p-3 rounded-lg border ${
+                                                                t.type === 'pay_banker' 
+                                                                    ? 'bg-rose-50 border-rose-100' 
+                                                                    : 'bg-emerald-50 border-emerald-100'
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="font-semibold text-slate-700">{t.from}</span>
+                                                                <IconArrowRightLeft size={14} className="text-slate-400" />
+                                                                <span className="font-semibold text-slate-700">{t.to}</span>
+                                                            </div>
+                                                            <span className={`font-bold ${t.type === 'pay_banker' ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                                                {formatMoney(t.amount)}
+                                                            </span>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                            
+                                            <div className="mt-5 p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm text-blue-800 text-center">
+                                                Tất cả giao dịch được cấn trừ và chuyển về tài khoản của <strong>Duy Kha</strong>.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 2: Chi Tiết Hóa Đơn Từng Người (Minh Bạch) */}
+                        {activeTab === 'breakdown' && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8">
+                                <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                    <IconUsers className="text-blue-500" size={24} />
+                                    Chi Tiết Hóa Đơn Từng Người (Minh Bạch)
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {PEOPLE.map(person => {
+                                        const data = detailedBreakdown[person];
+                                        const net = data.totalPaid - data.totalConsumed;
+                                        
+                                        return (
+                                            <div key={person} className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col hover:shadow-md transition-shadow">
+                                                <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-3">
+                                                    <span className="font-bold text-lg text-slate-700">{person}</span>
+                                                    <span className={`text-sm font-bold px-2 py-1 rounded ${net > 0 ? 'bg-emerald-100 text-emerald-700' : net < 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-700'}`}>
+                                                        {net > 0 ? 'Dư:' : net < 0 ? 'Nợ:' : 'Hòa:'} {formatMoney(Math.abs(net))}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex-1">
+                                                    <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2 flex justify-between">
+                                                        <span>Phần mình xài:</span>
+                                                        <span className="text-rose-600">{formatMoney(data.totalConsumed)}</span>
+                                                    </h4>
+                                                    <div className="flex flex-wrap gap-1.5 mb-5">
+                                                        {data.consumed.map((item, idx) => (
+                                                            <div key={idx} className="inline-flex items-center px-2 py-1 rounded bg-white border border-rose-100 text-slate-700 text-xs shadow-sm hover:border-rose-300 transition-colors cursor-help" title={item.name}>
+                                                                <span className="truncate max-w-[120px] mr-1.5 text-slate-500">{item.name}:</span>
+                                                                <span className="font-semibold text-rose-600">{formatMoney(item.amount)}</span>
+                                                            </div>
+                                                        ))}
+                                                        {data.consumed.length === 0 && <span className="text-xs text-slate-400 italic">Không có</span>}
+                                                    </div>
+
+                                                    <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2 flex justify-between">
+                                                        <span>Đã ứng trước:</span>
+                                                        <span className="text-emerald-600">{formatMoney(data.totalPaid)}</span>
+                                                    </h4>
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {data.paid.map((item, idx) => (
+                                                            <div key={idx} className="inline-flex items-center px-2 py-1 rounded bg-white border border-emerald-100 text-slate-700 text-xs shadow-sm hover:border-emerald-300 transition-colors cursor-help" title={item.name}>
+                                                                <span className="truncate max-w-[120px] mr-1.5 text-slate-500">{item.name}:</span>
+                                                                <span className="font-semibold text-emerald-600">{formatMoney(item.amount)}</span>
+                                                            </div>
+                                                        ))}
+                                                        {data.paid.length === 0 && <span className="text-xs text-slate-400 italic">Không có</span>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 3: Chi Tiết Cấn Trừ Cá Nhân */}
+                        {activeTab === 'balances' && (
+                            <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8">
+                                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+                                    <IconUsers className="text-blue-500" size={24} />
+                                    Tổng Hợp Cấn Trừ Cá Nhân
+                                </h3>
+                                <div className="space-y-3 text-base">
+                                    {PEOPLE.map(person => (
+                                        <div key={person} className="flex justify-between items-center py-3 border-b border-slate-50 hover:bg-slate-50 px-4 rounded-lg transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold">
+                                                    {person.charAt(0)}
+                                                </div>
+                                                <span className="text-slate-700 font-medium text-lg">{person}</span>
+                                            </div>
+                                            <span className={`font-bold text-lg ${balances[person] > 0 ? 'text-emerald-500' : balances[person] < 0 ? 'text-rose-500' : 'text-slate-400'}`}>
+                                                {balances[person] > 0 ? '+' : ''}{formatMoney(balances[person])}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-6 text-sm text-slate-500 text-center italic">
+                                    * Số dương (+) là số tiền bạn sẽ nhận lại từ quỹ. Số âm (-) là số tiền bạn cần đóng thêm vào quỹ.
+                                </div>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             );
