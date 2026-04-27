@@ -5,14 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thống Kê Chi Tiêu Vũng Tàu</title>
     
-    <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- React & ReactDOM (CDN) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Babel (để biên dịch JSX ngay trên trình duyệt) -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
@@ -48,7 +45,7 @@
 
         const IconReceipt = ({ size = 24, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"></path>
+                <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1Z"></path>
                 <path d="M16 8h-6"></path>
                 <path d="M16 12h-8"></path>
                 <path d="M16 16h-8"></path>
@@ -90,32 +87,33 @@
 
         const INITIAL_EXPENSES = [
             { id: 1, name: 'Tiền thuê Homestay', payer: 'Kha', amount: 2200000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
-            { id: 2, name: 'Tiền Grab Car (Đi) - Xe 1', payer: 'Hoàng', amount: 759000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
-            { id: 3, name: 'Ăn sáng - Mì Trộn', payer: 'Khang', amount: 312000, excluded: ['Tân', 'Phúc', 'Trâm Anh'], custom: {}, note: 'Chia 5' },
-            { id: 4, name: 'Phúc Long + Rengoku', payer: 'Kha', amount: 250000, excluded: ['Tân', 'Phúc'], custom: {}, note: 'Chia 6' },
-            { id: 5, name: 'Thuê xe máy (3 xe + xăng)', payer: 'Kha', amount: 500000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
-            { id: 6, name: 'Xăng xe máy (2 xe còn lại)', payer: 'Hoàng', amount: 60000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
-            { id: 7, name: 'Kem bơ sầu riêng', payer: 'Kha', amount: 445000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
-            { id: 8, name: 'Coffee Suối Bên Biển', payer: 'Kha', amount: 624240, excluded: ['Hoàng'], custom: {}, note: 'Chia 7' },
-            { id: 9, name: 'Ăn tối Nhà hàng La Sirena', payer: 'Kha', amount: 0, excluded: [], custom: {}, note: 'Chia đều 8 người (Chưa có giá)' },
-            { id: 10, name: 'Tầng 2 (Karaoke + Đồ ăn)', payer: 'Kha', amount: 1800000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
-            { id: 11, name: 'Tầng 3 (Bia + Mồi + Trái cây...)', payer: 'Kha', amount: 1130000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
-            { id: 12, name: 'Tiền ăn brunch', payer: 'Trâm Anh', amount: 918000, excluded: ['Kha'], custom: { 'Khang': 70000 }, note: 'Chia 7, Khang 70k' },
+            { id: 2, name: 'Tiền Grab Car (Đi) - Xe 1', payer: 'Hoàng', amount: 759000, excluded: ['Tân', 'Phúc', 'Kha', 'Siêu'], custom: {}, note: 'Chia đều 4 người (trừ Tân, Phúc, Kha, Siêu)' },
+            { id: 3, name: 'Tiền Grab Car 2 (Đi) - Xe 2', payer: 'Kha', amount: 550000, excluded: ['Hoàng', 'Khang', 'Trâm Anh', 'Long', 'Tân', 'Phúc'], custom: {}, note: 'Chia đều 2 người (Kha, Siêu)' },
+            { id: 4, name: 'Ăn sáng - Mì Trộn', payer: 'Khang', amount: 312000, excluded: ['Tân', 'Phúc', 'Trâm Anh'], custom: {}, note: 'Chia 5' },
+            { id: 5, name: 'Phúc Long + Rengoku', payer: 'Kha', amount: 250000, excluded: ['Tân', 'Phúc'], custom: {}, note: 'Chia 6' },
+            { id: 6, name: 'Thuê xe máy (3 xe + xăng)', payer: 'Kha', amount: 500000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
+            { id: 7, name: 'Xăng xe máy (2 xe còn lại)', payer: 'Hoàng', amount: 60000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
+            { id: 8, name: 'Kem bơ sầu riêng', payer: 'Kha', amount: 445000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
+            { id: 9, name: 'Coffee Suối Bên Biển', payer: 'Kha', amount: 624240, excluded: ['Hoàng'], custom: {}, note: 'Chia 7' },
+            { id: 10, name: 'Ăn tối Nhà hàng La Sirena', payer: 'Kha', amount: 0, excluded: [], custom: {}, note: 'Chia đều 8 người (Chưa có giá)' },
+            { id: 11, name: 'Tầng 2 (Karaoke + Đồ ăn)', payer: 'Kha', amount: 1800000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
+            { id: 12, name: 'Tầng 3 (Bia + Mồi + Trái cây...)', payer: 'Kha', amount: 1130000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
+            { id: 13, name: 'Tiền ăn brunch', payer: 'Trâm Anh', amount: 918000, excluded: ['Kha'], custom: { 'Khang': 70000 }, note: 'Chia 7, Khang 70k' },
             {
-    id: 13,
-    name: 'Bánh bông lan',
-    payer: 'Long',
-    amount: 185000,
-    excluded: ['Hoàng', 'Khang', 'Long', 'Tân', 'Phúc', 'Siêu'],
-    custom: {
-        'Trâm Anh': 37000,
-        'Kha': 148000
-    },
-    note: 'Trâm Anh 1 hộp 37k, phần còn lại của Kha 148k'
-},
-            { id: 14, name: 'Trà sữa', payer: 'Long', amount: 135000, excluded: ['Kha', 'Khang'], custom: { 'Hoàng': 25000 }, note: 'Hoàng 25k, còn lại chia 5' },
+                id: 14,
+                name: 'Bánh bông lan',
+                payer: 'Long',
+                amount: 185000,
+                excluded: ['Hoàng', 'Khang', 'Long', 'Tân', 'Phúc', 'Siêu'],
+                custom: {
+                    'Trâm Anh': 37000,
+                    'Kha': 148000
+                },
+                note: 'Trâm Anh 1 hộp 37k, phần còn lại của Kha 148k'
+            },
+            { id: 15, name: 'Trà sữa', payer: 'Long', amount: 135000, excluded: ['Kha', 'Khang'], custom: { 'Hoàng': 25000 }, note: 'Hoàng 25k, còn lại chia 5' },
             {
-                id: 15,
+                id: 16,
                 name: 'Tiền donut',
                 payer: 'Tân',
                 amount: 514000,
@@ -131,7 +129,7 @@
                 },
                 note: 'Tổng 514k sau voucher. CB7 65k: Trâm Anh 2 hộp, Tân/Phúc/Siêu/Kha/Hoàng mỗi người 1 hộp. CB8 70k: Long 1 hộp.'
             },
-            { id: 16, name: 'Tiền xe về', payer: 'Trâm Anh', amount: 800000, excluded: ['Tân', 'Phúc', 'Kha'], custom: {}, note: 'Chia 5' },
+            { id: 17, name: 'Tiền xe về', payer: 'Trâm Anh', amount: 800000, excluded: ['Tân', 'Phúc', 'Kha'], custom: {}, note: 'Chia 5' },
         ];
 
         function App() {
