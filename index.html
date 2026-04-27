@@ -19,26 +19,70 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useMemo } = React;
 
         // --- Các Icon SVG thay thế cho lucide-react để chạy độc lập không cần cài đặt ---
         const IconCalculator = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="18"></line><path d="M16 10h.01"></path><path d="M12 10h.01"></path><path d="M8 10h.01"></path><path d="M12 14h.01"></path><path d="M8 14h.01"></path><path d="M12 18h.01"></path><path d="M8 18h.01"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                <line x1="8" y1="6" x2="16" y2="6"></line>
+                <line x1="16" y1="14" x2="16" y2="18"></line>
+                <path d="M16 10h.01"></path>
+                <path d="M12 10h.01"></path>
+                <path d="M8 10h.01"></path>
+                <path d="M12 14h.01"></path>
+                <path d="M8 14h.01"></path>
+                <path d="M12 18h.01"></path>
+                <path d="M8 18h.01"></path>
+            </svg>
         );
+
         const IconUsers = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
         );
+
         const IconReceipt = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"></path><path d="M16 8h-6"></path><path d="M16 12h-8"></path><path d="M16 16h-8"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"></path>
+                <path d="M16 8h-6"></path>
+                <path d="M16 12h-8"></path>
+                <path d="M16 16h-8"></path>
+            </svg>
         );
+
         const IconArrowRightLeft = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m16 3 4 4-4 4"></path><path d="M20 7H4"></path><path d="m8 21-4-4 4-4"></path><path d="M4 17h16"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="m16 3 4 4-4 4"></path>
+                <path d="M20 7H4"></path>
+                <path d="m8 21-4-4 4-4"></path>
+                <path d="M4 17h16"></path>
+            </svg>
         );
+
         const IconEdit2 = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+            </svg>
         );
+
         const IconSave = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+        );
+
+        const IconX = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+            </svg>
         );
 
         // --- Dữ liệu logic ---
@@ -59,7 +103,23 @@
             { id: 12, name: 'Tiền ăn brunch', payer: 'Trâm Anh', amount: 918000, excluded: ['Kha'], custom: { 'Khang': 70000 }, note: 'Chia 7, Khang 70k' },
             { id: 13, name: 'Bánh bông lan', payer: 'Long', amount: 185000, excluded: ['Hoàng', 'Khang', 'Tân', 'Phúc', 'Siêu'], custom: {}, note: 'Trâm Anh và Kha chia' },
             { id: 14, name: 'Trà sữa', payer: 'Long', amount: 135000, excluded: ['Kha', 'Khang'], custom: { 'Hoàng': 25000 }, note: 'Hoàng 25k, còn lại chia 5' },
-            { id: 15, name: 'Tiền donut', payer: 'Tân', amount: 0, excluded: [], custom: {}, note: 'Chưa có giá' },
+            {
+                id: 15,
+                name: 'Tiền donut',
+                payer: 'Tân',
+                amount: 514000,
+                excluded: ['Hoàng'],
+                custom: {
+                    'Trâm Anh': 514000 * 130000 / 525000,
+                    'Tân': 514000 * 65000 / 525000,
+                    'Phúc': 514000 * 65000 / 525000,
+                    'Siêu': 514000 * 65000 / 525000,
+                    'Kha': 514000 * 65000 / 525000,
+                    'Hoàng': 514000 * 65000 / 525000,
+                    'Long': 514000 * 70000 / 525000
+                },
+                note: 'Tổng 514k sau voucher. CB7 65k: Trâm Anh 2 hộp, Tân/Phúc/Siêu/Kha/Hoàng mỗi người 1 hộp. CB8 70k: Long 1 hộp.'
+            },
             { id: 16, name: 'Tiền xe về', payer: 'Trâm Anh', amount: 800000, excluded: ['Tân', 'Phúc', 'Kha'], custom: {}, note: 'Chia 5' },
         ];
 
@@ -67,9 +127,49 @@
             const [expenses, setExpenses] = useState(INITIAL_EXPENSES);
             const [editingId, setEditingId] = useState(null);
             const [editAmount, setEditAmount] = useState('');
+            const [selectedExpense, setSelectedExpense] = useState(null);
+            const [activeTab, setActiveTab] = useState('overview');
 
             const formatMoney = (amount) => {
-                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Math.round(amount));
+                return new Intl.NumberFormat('vi-VN', { 
+                    style: 'currency', 
+                    currency: 'VND' 
+                }).format(Math.round(amount));
+            };
+
+            const getExpenseDetails = (exp) => {
+                if (!exp || exp.amount <= 0) return [];
+
+                let details = [];
+                let remainingAmount = exp.amount;
+                let participantsPool = PEOPLE.filter(p => !exp.excluded.includes(p));
+
+                if (Object.keys(exp.custom).length > 0) {
+                    Object.entries(exp.custom).forEach(([person, specificAmount]) => {
+                        details.push({
+                            person,
+                            amount: specificAmount,
+                            type: 'Riêng'
+                        });
+
+                        remainingAmount -= specificAmount;
+                        participantsPool = participantsPool.filter(p => p !== person);
+                    });
+                }
+
+                if (participantsPool.length > 0) {
+                    const splitAmount = remainingAmount / participantsPool.length;
+
+                    participantsPool.forEach(person => {
+                        details.push({
+                            person,
+                            amount: splitAmount,
+                            type: 'Chia đều'
+                        });
+                    });
+                }
+
+                return details;
             };
 
             const handleSaveAmount = (id) => {
@@ -86,6 +186,7 @@
                 expenses.forEach(exp => {
                     if (exp.amount > 0) {
                         calcBalances[exp.payer] += exp.amount;
+
                         let remainingAmount = exp.amount;
                         let participantsPool = PEOPLE.filter(p => !exp.excluded.includes(p));
 
@@ -117,24 +218,34 @@
                     if (person === BANKER) return;
 
                     const balance = balances[person];
+
                     if (balance < -1) { 
-                        results.push({ from: person, to: BANKER, amount: Math.abs(balance), type: 'pay_banker' });
-                    }
-                    else if (balance > 1) {
-                        results.push({ from: BANKER, to: person, amount: balance, type: 'receive_from_banker' });
+                        results.push({ 
+                            from: person, 
+                            to: BANKER, 
+                            amount: Math.abs(balance), 
+                            type: 'pay_banker' 
+                        });
+                    } else if (balance > 1) {
+                        results.push({ 
+                            from: BANKER, 
+                            to: person, 
+                            amount: balance, 
+                            type: 'receive_from_banker' 
+                        });
                     }
                 });
 
                 return results.sort((a, b) => a.type === 'pay_banker' ? -1 : 1);
             }, [balances]);
 
-            // THÊM MỚI: Logic tính toán chi tiết minh bạch cho từng người
             const detailedBreakdown = useMemo(() => {
                 const breakdown = {};
+
                 PEOPLE.forEach(p => {
                     breakdown[p] = {
-                        consumed: [], // các khoản phải trả (đã tiêu)
-                        paid: [],     // các khoản đã ứng tiền trả
+                        consumed: [],
+                        paid: [],
                         totalConsumed: 0,
                         totalPaid: 0
                     };
@@ -143,29 +254,36 @@
                 expenses.forEach(exp => {
                     if (exp.amount <= 0) return;
 
-                    // 1. Ghi nhận người đã ứng tiền
-                    breakdown[exp.payer].paid.push({ name: exp.name, amount: exp.amount });
+                    breakdown[exp.payer].paid.push({ 
+                        name: exp.name, 
+                        amount: exp.amount 
+                    });
                     breakdown[exp.payer].totalPaid += exp.amount;
 
-                    // 2. Ghi nhận người tiêu dùng (phải trả tiền)
                     let remainingAmount = exp.amount;
                     let participantsPool = PEOPLE.filter(p => !exp.excluded.includes(p));
 
-                    // Xử lý các khoản có giá cố định trước
                     if (Object.keys(exp.custom).length > 0) {
                         Object.entries(exp.custom).forEach(([person, specificAmount]) => {
-                            breakdown[person].consumed.push({ name: exp.name + " (Riêng)", amount: specificAmount });
+                            breakdown[person].consumed.push({ 
+                                name: exp.name + " (Riêng)", 
+                                amount: specificAmount 
+                            });
                             breakdown[person].totalConsumed += specificAmount;
+
                             remainingAmount -= specificAmount;
                             participantsPool = participantsPool.filter(p => p !== person);
                         });
                     }
 
-                    // Chia đều phần còn lại
                     if (participantsPool.length > 0) {
                         const splitAmount = remainingAmount / participantsPool.length;
+
                         participantsPool.forEach(person => {
-                            breakdown[person].consumed.push({ name: exp.name, amount: splitAmount });
+                            breakdown[person].consumed.push({ 
+                                name: exp.name, 
+                                amount: splitAmount 
+                            });
                             breakdown[person].totalConsumed += splitAmount;
                         });
                     }
@@ -175,9 +293,6 @@
             }, [expenses]);
 
             const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-
-            // THÊM MỚI: Trạng thái Tab hiện tại đang mở
-            const [activeTab, setActiveTab] = useState('overview');
 
             return (
                 <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-800">
@@ -189,7 +304,10 @@
                                 <IconCalculator className="text-blue-600" size={32} />
                                 Tổng Kết Chi Phí Chuyến Đi
                             </h1>
-                            <p className="text-slate-500">Mọi khoản thu chi sẽ được cấn trừ và chuyển về một mối duy nhất là <strong className="text-blue-600">Duy Kha</strong>.</p>
+                            <p className="text-slate-500">
+                                Mọi khoản thu chi sẽ được cấn trừ và chuyển về một mối duy nhất là 
+                                <strong className="text-blue-600"> Duy Kha</strong>.
+                            </p>
                         </div>
 
                         {/* Thanh Tab Navigation */}
@@ -201,6 +319,7 @@
                                 <IconReceipt size={18} />
                                 Bảng Kê & Thanh Toán
                             </button>
+
                             <button 
                                 onClick={() => setActiveTab('breakdown')}
                                 className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${activeTab === 'breakdown' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
@@ -208,6 +327,7 @@
                                 <IconUsers size={18} />
                                 Chi Tiết Từng Người
                             </button>
+
                             <button 
                                 onClick={() => setActiveTab('balances')}
                                 className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${activeTab === 'balances' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
@@ -227,10 +347,12 @@
                                                 <IconReceipt className="text-indigo-500" size={20} />
                                                 Bảng Kê Chi Tiết
                                             </h2>
+
                                             <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
                                                 Tổng: {formatMoney(totalSpent)}
                                             </span>
                                         </div>
+
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-sm text-left">
                                                 <thead className="text-xs text-slate-500 uppercase bg-slate-50">
@@ -240,18 +362,27 @@
                                                         <th className="px-4 py-3 font-medium">Người trả</th>
                                                         <th className="px-4 py-3 font-medium text-right">Số tiền</th>
                                                         <th className="px-4 py-3 font-medium">Ghi chú</th>
+                                                        <th className="px-4 py-3 font-medium text-center">Chi tiết</th>
                                                     </tr>
                                                 </thead>
+
                                                 <tbody className="divide-y divide-slate-100">
                                                     {expenses.map((exp, index) => (
                                                         <tr key={exp.id} className="hover:bg-slate-50/50 transition-colors">
-                                                            <td className="px-4 py-3 font-medium text-slate-400">{index + 1}</td>
-                                                            <td className="px-4 py-3 font-medium text-slate-700">{exp.name}</td>
+                                                            <td className="px-4 py-3 font-medium text-slate-400">
+                                                                {index + 1}
+                                                            </td>
+
+                                                            <td className="px-4 py-3 font-medium text-slate-700">
+                                                                {exp.name}
+                                                            </td>
+
                                                             <td className="px-4 py-3">
                                                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                                                                     {exp.payer}
                                                                 </span>
                                                             </td>
+
                                                             <td className="px-4 py-3 text-right font-medium">
                                                                 {editingId === exp.id ? (
                                                                     <div className="flex items-center justify-end gap-2">
@@ -263,6 +394,7 @@
                                                                             autoFocus
                                                                             placeholder="Nhập số tiền"
                                                                         />
+
                                                                         <button 
                                                                             onClick={() => handleSaveAmount(exp.id)}
                                                                             className="p-1.5 text-green-600 hover:bg-green-50 rounded"
@@ -271,19 +403,33 @@
                                                                         </button>
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="flex items-center justify-end gap-2 group cursor-pointer" onClick={() => {
-                                                                        setEditingId(exp.id);
-                                                                        setEditAmount(exp.amount === 0 ? '' : exp.amount);
-                                                                    }}>
+                                                                    <div 
+                                                                        className="flex items-center justify-end gap-2 group cursor-pointer" 
+                                                                        onClick={() => {
+                                                                            setEditingId(exp.id);
+                                                                            setEditAmount(exp.amount === 0 ? '' : exp.amount);
+                                                                        }}
+                                                                    >
                                                                         <span className={exp.amount === 0 ? 'text-rose-500 font-semibold' : 'text-slate-800'}>
                                                                             {exp.amount === 0 ? 'Chưa cập nhật' : formatMoney(exp.amount)}
                                                                         </span>
+
                                                                         <IconEdit2 size={14} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                                     </div>
                                                                 )}
                                                             </td>
+
                                                             <td className="px-4 py-3 text-xs text-slate-500 truncate max-w-[150px]" title={exp.note}>
                                                                 {exp.note}
+                                                            </td>
+
+                                                            <td className="px-4 py-3 text-center">
+                                                                <button
+                                                                    onClick={() => setSelectedExpense(exp)}
+                                                                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-colors"
+                                                                >
+                                                                    Chi tiết
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -321,6 +467,7 @@
                                                                 <IconArrowRightLeft size={14} className="text-slate-400" />
                                                                 <span className="font-semibold text-slate-700">{t.to}</span>
                                                             </div>
+
                                                             <span className={`font-bold ${t.type === 'pay_banker' ? 'text-rose-600' : 'text-emerald-600'}`}>
                                                                 {formatMoney(t.amount)}
                                                             </span>
@@ -338,13 +485,14 @@
                             </div>
                         )}
 
-                        {/* TAB 2: Chi Tiết Hóa Đơn Từng Người (Minh Bạch) */}
+                        {/* TAB 2: Chi Tiết Hóa Đơn Từng Người */}
                         {activeTab === 'breakdown' && (
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 md:p-8">
                                 <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                                     <IconUsers className="text-blue-500" size={24} />
-                                    Chi Tiết Hóa Đơn Từng Người (Minh Bạch)
+                                    Chi Tiết Hóa Đơn Từng Người
                                 </h2>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {PEOPLE.map(person => {
                                         const data = detailedBreakdown[person];
@@ -353,7 +501,10 @@
                                         return (
                                             <div key={person} className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col hover:shadow-md transition-shadow">
                                                 <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-3">
-                                                    <span className="font-bold text-lg text-slate-700">{person}</span>
+                                                    <span className="font-bold text-lg text-slate-700">
+                                                        {person}
+                                                    </span>
+
                                                     <span className={`text-sm font-bold px-2 py-1 rounded ${net > 0 ? 'bg-emerald-100 text-emerald-700' : net < 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-700'}`}>
                                                         {net > 0 ? 'Dư:' : net < 0 ? 'Nợ:' : 'Hòa:'} {formatMoney(Math.abs(net))}
                                                     </span>
@@ -364,28 +515,52 @@
                                                         <span>Phần mình xài:</span>
                                                         <span className="text-rose-600">{formatMoney(data.totalConsumed)}</span>
                                                     </h4>
+
                                                     <div className="flex flex-wrap gap-1.5 mb-5">
                                                         {data.consumed.map((item, idx) => (
-                                                            <div key={idx} className="inline-flex items-center px-2 py-1 rounded bg-white border border-rose-100 text-slate-700 text-xs shadow-sm hover:border-rose-300 transition-colors cursor-help" title={item.name}>
-                                                                <span className="truncate max-w-[120px] mr-1.5 text-slate-500">{item.name}:</span>
-                                                                <span className="font-semibold text-rose-600">{formatMoney(item.amount)}</span>
+                                                            <div 
+                                                                key={idx} 
+                                                                className="inline-flex items-center px-2 py-1 rounded bg-white border border-rose-100 text-slate-700 text-xs shadow-sm hover:border-rose-300 transition-colors cursor-help" 
+                                                                title={item.name}
+                                                            >
+                                                                <span className="truncate max-w-[120px] mr-1.5 text-slate-500">
+                                                                    {item.name}:
+                                                                </span>
+                                                                <span className="font-semibold text-rose-600">
+                                                                    {formatMoney(item.amount)}
+                                                                </span>
                                                             </div>
                                                         ))}
-                                                        {data.consumed.length === 0 && <span className="text-xs text-slate-400 italic">Không có</span>}
+
+                                                        {data.consumed.length === 0 && (
+                                                            <span className="text-xs text-slate-400 italic">Không có</span>
+                                                        )}
                                                     </div>
 
                                                     <h4 className="text-xs font-semibold text-slate-500 uppercase mb-2 flex justify-between">
                                                         <span>Đã ứng trước:</span>
                                                         <span className="text-emerald-600">{formatMoney(data.totalPaid)}</span>
                                                     </h4>
+
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {data.paid.map((item, idx) => (
-                                                            <div key={idx} className="inline-flex items-center px-2 py-1 rounded bg-white border border-emerald-100 text-slate-700 text-xs shadow-sm hover:border-emerald-300 transition-colors cursor-help" title={item.name}>
-                                                                <span className="truncate max-w-[120px] mr-1.5 text-slate-500">{item.name}:</span>
-                                                                <span className="font-semibold text-emerald-600">{formatMoney(item.amount)}</span>
+                                                            <div 
+                                                                key={idx} 
+                                                                className="inline-flex items-center px-2 py-1 rounded bg-white border border-emerald-100 text-slate-700 text-xs shadow-sm hover:border-emerald-300 transition-colors cursor-help" 
+                                                                title={item.name}
+                                                            >
+                                                                <span className="truncate max-w-[120px] mr-1.5 text-slate-500">
+                                                                    {item.name}:
+                                                                </span>
+                                                                <span className="font-semibold text-emerald-600">
+                                                                    {formatMoney(item.amount)}
+                                                                </span>
                                                             </div>
                                                         ))}
-                                                        {data.paid.length === 0 && <span className="text-xs text-slate-400 italic">Không có</span>}
+
+                                                        {data.paid.length === 0 && (
+                                                            <span className="text-xs text-slate-400 italic">Không có</span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -402,6 +577,7 @@
                                     <IconUsers className="text-blue-500" size={24} />
                                     Tổng Hợp Cấn Trừ Cá Nhân
                                 </h3>
+
                                 <div className="space-y-3 text-base">
                                     {PEOPLE.map(person => (
                                         <div key={person} className="flex justify-between items-center py-3 border-b border-slate-50 hover:bg-slate-50 px-4 rounded-lg transition-colors">
@@ -409,21 +585,155 @@
                                                 <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold">
                                                     {person.charAt(0)}
                                                 </div>
-                                                <span className="text-slate-700 font-medium text-lg">{person}</span>
+
+                                                <span className="text-slate-700 font-medium text-lg">
+                                                    {person}
+                                                </span>
                                             </div>
+
                                             <span className={`font-bold text-lg ${balances[person] > 0 ? 'text-emerald-500' : balances[person] < 0 ? 'text-rose-500' : 'text-slate-400'}`}>
                                                 {balances[person] > 0 ? '+' : ''}{formatMoney(balances[person])}
                                             </span>
                                         </div>
                                     ))}
                                 </div>
+
                                 <div className="mt-6 text-sm text-slate-500 text-center italic">
                                     * Số dương (+) là số tiền bạn sẽ nhận lại từ quỹ. Số âm (-) là số tiền bạn cần đóng thêm vào quỹ.
                                 </div>
                             </div>
                         )}
-
                     </div>
+
+                    {/* MODAL CHI TIẾT KHOẢN CHI */}
+                    {selectedExpense && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                            {/* Overlay */}
+                            <div 
+                                className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+                                onClick={() => setSelectedExpense(null)}
+                            ></div>
+
+                            {/* Modal */}
+                            <div className="relative bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[85vh] overflow-hidden">
+                                <div className="p-5 border-b border-slate-100 flex items-start justify-between gap-4 bg-slate-50">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-800">
+                                            {selectedExpense.name}
+                                        </h3>
+
+                                        <p className="text-sm text-slate-500 mt-1">
+                                            Người trả: <strong className="text-blue-600">{selectedExpense.payer}</strong>
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setSelectedExpense(null)}
+                                        className="p-2 rounded-lg hover:bg-slate-200 text-slate-500 transition-colors"
+                                    >
+                                        <IconX size={20} />
+                                    </button>
+                                </div>
+
+                                <div className="p-5 overflow-y-auto max-h-[65vh]">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+                                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                                            <div className="text-xs text-blue-600 font-semibold uppercase mb-1">
+                                                Tổng tiền
+                                            </div>
+
+                                            <div className="text-lg font-bold text-blue-700">
+                                                {formatMoney(selectedExpense.amount)}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                                            <div className="text-xs text-emerald-600 font-semibold uppercase mb-1">
+                                                Người trả
+                                            </div>
+
+                                            <div className="text-lg font-bold text-emerald-700">
+                                                {selectedExpense.payer}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-rose-50 border border-rose-100 rounded-xl p-4">
+                                            <div className="text-xs text-rose-600 font-semibold uppercase mb-1">
+                                                Không tính
+                                            </div>
+
+                                            <div className="text-lg font-bold text-rose-700">
+                                                {selectedExpense.excluded.length > 0 
+                                                    ? selectedExpense.excluded.join(', ') 
+                                                    : 'Không có'}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-5 p-4 bg-amber-50 border border-amber-100 rounded-xl text-sm text-amber-800">
+                                        <strong>Ghi chú:</strong> {selectedExpense.note}
+                                    </div>
+
+                                    {selectedExpense.amount <= 0 ? (
+                                        <div className="p-6 text-center text-rose-600 bg-rose-50 border border-rose-100 rounded-xl font-semibold">
+                                            Khoản này chưa cập nhật số tiền.
+                                        </div>
+                                    ) : (
+                                        <div className="border border-slate-200 rounded-xl overflow-hidden">
+                                            <table className="w-full text-sm">
+                                                <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
+                                                    <tr>
+                                                        <th className="px-4 py-3 text-left font-medium">Người</th>
+                                                        <th className="px-4 py-3 text-left font-medium">Loại tính</th>
+                                                        <th className="px-4 py-3 text-right font-medium">Số tiền</th>
+                                                    </tr>
+                                                </thead>
+
+                                                <tbody className="divide-y divide-slate-100">
+                                                    {getExpenseDetails(selectedExpense).map((item, idx) => (
+                                                        <tr key={idx} className="hover:bg-slate-50">
+                                                            <td className="px-4 py-3 font-semibold text-slate-700">
+                                                                {item.person}
+                                                            </td>
+
+                                                            <td className="px-4 py-3">
+                                                                <span className={`inline-flex px-2 py-1 rounded text-xs font-semibold ${
+                                                                    item.type === 'Riêng'
+                                                                        ? 'bg-purple-50 text-purple-700 border border-purple-100'
+                                                                        : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                                                }`}>
+                                                                    {item.type}
+                                                                </span>
+                                                            </td>
+
+                                                            <td className="px-4 py-3 text-right font-bold text-rose-600">
+                                                                {formatMoney(item.amount)}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+
+                                                <tfoot className="bg-slate-50 border-t border-slate-200">
+                                                    <tr>
+                                                        <td colSpan="2" className="px-4 py-3 font-bold text-slate-700">
+                                                            Tổng đã chia
+                                                        </td>
+
+                                                        <td className="px-4 py-3 text-right font-bold text-blue-700">
+                                                            {formatMoney(
+                                                                getExpenseDetails(selectedExpense)
+                                                                    .reduce((sum, item) => sum + item.amount, 0)
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             );
         }
