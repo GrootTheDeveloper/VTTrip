@@ -101,7 +101,18 @@
             { id: 10, name: 'Tầng 2 (Karaoke + Đồ ăn)', payer: 'Kha', amount: 1800000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
             { id: 11, name: 'Tầng 3 (Bia + Mồi + Trái cây...)', payer: 'Kha', amount: 1130000, excluded: [], custom: {}, note: 'Chia đều 8 người' },
             { id: 12, name: 'Tiền ăn brunch', payer: 'Trâm Anh', amount: 918000, excluded: ['Kha'], custom: { 'Khang': 70000 }, note: 'Chia 7, Khang 70k' },
-            { id: 13, name: 'Bánh bông lan', payer: 'Long', amount: 185000, excluded: ['Hoàng', 'Khang', 'Tân', 'Phúc', 'Siêu'], custom: {}, note: 'Trâm Anh và Kha chia' },
+            {
+    id: 13,
+    name: 'Bánh bông lan',
+    payer: 'Long',
+    amount: 185000,
+    excluded: ['Hoàng', 'Khang', 'Long', 'Tân', 'Phúc', 'Siêu'],
+    custom: {
+        'Trâm Anh': 65000,
+        'Kha': 120000
+    },
+    note: 'Trâm Anh 1 hộp 65k, phần còn lại của Kha 120k'
+},,
             { id: 14, name: 'Trà sữa', payer: 'Long', amount: 135000, excluded: ['Kha', 'Khang'], custom: { 'Hoàng': 25000 }, note: 'Hoàng 25k, còn lại chia 5' },
             {
                 id: 15,
