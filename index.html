@@ -12,18 +12,25 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Babel (để chạy JSX trực tiếp trên trình duyệt) -->
+    <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- SheetJS (để xuất file Excel) -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- THAY ĐỔI: Sử dụng xlsx-js-style để hỗ trợ định dạng màu sắc/viền cho Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
     <style>
-        /* Tùy chỉnh CSS khi in (PDF) để đảm bảo trang in đẹp nhất */
+        /* Tùy chỉnh CSS khi in (PDF) mang phong cách chuyên nghiệp */
         @media print {
-            body { background-color: white !important; }
+            body { 
+                background-color: white !important; 
+                -webkit-print-color-adjust: exact !important; /* Ép trình duyệt in cả màu nền */
+                print-color-adjust: exact !important; 
+            }
             .page-break { page-break-before: always; }
             .avoid-break { page-break-inside: avoid; }
+            
+            /* Ẩn thanh cuộn và căn lề trang giấy */
+            @page { margin: 15mm; size: A4; }
         }
     </style>
 </head>
@@ -282,77 +289,126 @@
 
             const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
-            // Xử lý Xuất Excel
+            // NÂNG CẤP: Hàm Xuất Excel Định Dạng Chuyên Nghiệp
             const exportToExcel = () => {
-                // Sheet 1: Tổng Quan
-                const summaryData = [
-                    ["BÁO CÁO CHI TIÊU CHUYẾN ĐI VŨNG TÀU"],
-                    [],
-                    ["1. THÔNG TIN CHUNG"],
-                    ["Tổng chi phí", totalSpent],
-                    [],
-                    ["2. DANH SÁCH CHUYỂN KHOẢN (Về Duy Kha)"],
-                    ["Người gửi", "Người nhận", "Số tiền", "Trạng thái", "Ghi chú"]
-                ];
-                if (transfers.length === 0) {
-                    summaryData.push(["-", "-", "-", "Tất cả đã hòa tiền"]);
-                } else {
-                    transfers.forEach(t => {
-                        summaryData.push([
-                            t.from, 
-                            t.to, 
-                            t.amount, 
-                            t.type === 'pay_banker' ? "Cần đóng thêm" : "Nhận lại từ quỹ",
-                            t.type === 'pay_banker' ? `${t.from} chuyển cho ${t.to}` : `${t.to} chuyển cho ${t.from}`
-                        ]);
-                    });
-                }
+                // Style Constants
+                const COLOR_PRIMARY = "0F172A"; // Slate 900
+                const COLOR_SECONDARY = "F8FAFC"; // Slate 50
+                const COLOR_BORDER = "CBD5E1"; // Slate 300
+                const COLOR_TEXT = "1E293B"; // Slate 800
+                const COLOR_SUCCESS = "16A34A"; // Green 600
+                const COLOR_DANGER = "DC2626"; // Red 600
 
-                // Sheet 2: Chi Tiết Cá Nhân
-                const individualData = [
-                    ["CHI TIẾT THU CHI TỪNG CÁ NHÂN"],
+                // 1. Tạo Workbook
+                const wb = XLSX.utils.book_new();
+
+                // Hàm hỗ trợ áp dụng style cho toàn Sheet
+                const applyStyling = (ws, titleRowIdx, headerRowIdx, colWidths) => {
+                    ws['!cols'] = colWidths;
+                    
+                    for (const cellAddr in ws) {
+                        if (cellAddr[0] === '!') continue; // Skip metadata
+                        const col = cellAddr.replace(/[0-9]/g, '');
+                        const row = parseInt(cellAddr.replace(/\D/g, '')) - 1; // 0-indexed
+                        
+                        let cellStyle = {
+                            font: { name: "Arial", sz: 11, color: { rgb: COLOR_TEXT } },
+                            alignment: { vertical: "center" },
+                            border: {
+                                top: { style: "thin", color: { rgb: COLOR_BORDER } },
+                                bottom: { style: "thin", color: { rgb: COLOR_BORDER } },
+                                left: { style: "thin", color: { rgb: COLOR_BORDER } },
+                                right: { style: "thin", color: { rgb: COLOR_BORDER } }
+                            }
+                        };
+
+                        if (row === titleRowIdx) {
+                            cellStyle = {
+                                font: { name: "Arial", sz: 16, bold: true, color: { rgb: "FFFFFF" } },
+                                fill: { fgColor: { rgb: COLOR_PRIMARY } },
+                                alignment: { horizontal: "center", vertical: "center" }
+                            };
+                        } else if (row === headerRowIdx) {
+                            cellStyle.font = { name: "Arial", sz: 12, bold: true, color: { rgb: "FFFFFF" } };
+                            cellStyle.fill = { fgColor: { rgb: COLOR_PRIMARY } };
+                            cellStyle.alignment = { horizontal: "center", vertical: "center" };
+                        } else if (ws[cellAddr].t === 'n') {
+                            // Cột số (Tiền tệ)
+                            cellStyle.numFmt = "#,##0";
+                        }
+
+                        // Style Dư/Nợ
+                        if (ws[cellAddr].v === "Dư" || ws[cellAddr].v === "Nhận lại từ quỹ") {
+                            cellStyle.font.color = { rgb: COLOR_SUCCESS };
+                            cellStyle.font.bold = true;
+                        } else if (ws[cellAddr].v === "Nợ" || ws[cellAddr].v === "Cần đóng thêm") {
+                            cellStyle.font.color = { rgb: COLOR_DANGER };
+                            cellStyle.font.bold = true;
+                        }
+
+                        ws[cellAddr].s = cellStyle;
+                    }
+                };
+
+                // --- Sheet 1: Thanh Toán Cuối Cùng ---
+                const sheet1Data = [
+                    ["BÁO CÁO TỔNG QUAN THANH TOÁN - VŨNG TÀU", "", "", "", ""],
                     [],
-                    ["Tên", "Đã ứng trước (1)", "Phần tiêu xài (2)", "Chênh lệch (1) - (2)", "Trạng thái"]
+                    ["Người Gửi (Đóng thêm)", "Người Nhận (Thủ quỹ)", "Số Tiền", "Trạng Thái", "Mô Tả Chi Tiết"]
+                ];
+                transfers.forEach(t => {
+                    sheet1Data.push([
+                        t.from, 
+                        t.to, 
+                        t.amount, 
+                        t.type === 'pay_banker' ? "Cần đóng thêm" : "Nhận lại từ quỹ",
+                        t.type === 'pay_banker' ? `${t.from} chuyển khoản cho ${t.to}` : `${t.to} chuyển khoản cho ${t.from}`
+                    ]);
+                });
+                const ws1 = XLSX.utils.aoa_to_sheet(sheet1Data);
+                ws1['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }]; // Merge title
+                applyStyling(ws1, 0, 2, [{wch: 25}, {wch: 25}, {wch: 20}, {wch: 20}, {wch: 40}]);
+                XLSX.utils.book_append_sheet(wb, ws1, "1. Tổng Quan Thanh Toán");
+
+                // --- Sheet 2: Cấn Trừ Cá Nhân ---
+                const sheet2Data = [
+                    ["CHI TIẾT THU CHI TỪNG CÁ NHÂN", "", "", "", ""],
+                    [],
+                    ["Thành Viên", "Đã Ứng Trước (1)", "Phần Sử Dụng (2)", "Chênh Lệch (1)-(2)", "Đánh Giá"]
                 ];
                 PEOPLE.forEach(p => {
                     const d = detailedBreakdown[p];
                     const net = d.totalPaid - d.totalConsumed;
                     const status = net > 0 ? "Dư" : (net < 0 ? "Nợ" : "Hòa");
-                    individualData.push([p, d.totalPaid, d.totalConsumed, net, status]);
+                    sheet2Data.push([p, d.totalPaid, d.totalConsumed, net, status]);
                 });
+                const ws2 = XLSX.utils.aoa_to_sheet(sheet2Data);
+                ws2['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
+                applyStyling(ws2, 0, 2, [{wch: 20}, {wch: 20}, {wch: 20}, {wch: 25}, {wch: 15}]);
+                XLSX.utils.book_append_sheet(wb, ws2, "2. Cấn Trừ Cá Nhân");
 
-                // Sheet 3: Danh sách hóa đơn gốc
-                const expensesData = [
-                    ["DANH SÁCH HÓA ĐƠN CHI TIẾT"],
+                // --- Sheet 3: Danh Sách Hóa Đơn ---
+                const sheet3Data = [
+                    ["DANH SÁCH CHI TIẾT CÁC HÓA ĐƠN", "", "", "", "", ""],
                     [],
-                    ["STT", "Tên khoản chi", "Người thanh toán", "Số tiền", "Không tính cho", "Ghi chú"]
+                    ["STT", "Hạng Mục Chi Tiêu", "Người Trả (Gốc)", "Tổng Tiền", "Loại Trừ (Không tính)", "Ghi Chú Nhanh"]
                 ];
                 expenses.forEach((exp, i) => {
-                    expensesData.push([
+                    sheet3Data.push([
                         i + 1, 
                         exp.name, 
                         exp.payer, 
                         exp.amount, 
-                        exp.excluded.join(', '), 
+                        exp.excluded.length > 0 ? exp.excluded.join(', ') : "Không", 
                         exp.note
                     ]);
                 });
+                const ws3 = XLSX.utils.aoa_to_sheet(sheet3Data);
+                ws3['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
+                applyStyling(ws3, 0, 2, [{wch: 8}, {wch: 40}, {wch: 20}, {wch: 15}, {wch: 35}, {wch: 40}]);
+                XLSX.utils.book_append_sheet(wb, ws3, "3. Hóa Đơn Gốc");
 
-                // Khởi tạo Workbook và thêm Sheets
-                const wb = XLSX.utils.book_new();
-                const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
-                const ws2 = XLSX.utils.aoa_to_sheet(individualData);
-                const ws3 = XLSX.utils.aoa_to_sheet(expensesData);
-
-                // Định dạng độ rộng cột cơ bản
-                ws1['!cols'] = [{wch: 25}, {wch: 20}, {wch: 15}, {wch: 20}, {wch: 30}];
-                ws2['!cols'] = [{wch: 15}, {wch: 20}, {wch: 20}, {wch: 20}, {wch: 15}];
-                ws3['!cols'] = [{wch: 5}, {wch: 35}, {wch: 20}, {wch: 15}, {wch: 30}, {wch: 40}];
-
-                XLSX.utils.book_append_sheet(wb, ws1, "Tổng Quan");
-                XLSX.utils.book_append_sheet(wb, ws2, "Chi Tiết Cá Nhân");
-                XLSX.utils.book_append_sheet(wb, ws3, "Hóa Đơn Gốc");
-
+                // Xuất file
                 XLSX.writeFile(wb, "Bao_Cao_Chi_Tieu_Vung_Tau.xlsx");
             };
 
@@ -377,18 +433,21 @@
                                 <div className="flex flex-wrap justify-center gap-3">
                                     <button 
                                         onClick={exportToExcel} 
-                                        className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition-colors text-sm font-semibold shadow-sm"
+                                        className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-lg hover:bg-emerald-700 transition-all text-sm font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5"
                                     >
                                         <IconExcel size={18} />
-                                        Xuất Excel (.xlsx)
+                                        Xuất Excel Chuyên Nghiệp (.xlsx)
                                     </button>
                                     
                                     <button 
-                                        onClick={() => window.print()} 
-                                        className="flex items-center gap-2 bg-slate-800 text-white px-5 py-2.5 rounded-lg hover:bg-slate-700 transition-colors text-sm font-semibold shadow-sm"
+                                        onClick={() => {
+                                            alert("Mẹo in PDF chuẩn: Ở giao diện in, hãy chắc chắn bạn đã BẬT tuỳ chọn 'Đồ hoạ nền' (Background Graphics) để báo cáo hiển thị đủ màu sắc nhé!");
+                                            setTimeout(() => window.print(), 500);
+                                        }} 
+                                        className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-lg hover:bg-slate-800 transition-all text-sm font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5"
                                     >
                                         <IconPdf size={18} />
-                                        Lưu PDF (In bản báo cáo)
+                                        Lưu Hóa Đơn PDF (In)
                                     </button>
                                 </div>
                             </div>
@@ -428,8 +487,8 @@
                                                     <IconReceipt className="text-indigo-500" size={20} />
                                                     Bảng Kê Chi Tiết
                                                 </h2>
-                                                <span className="text-sm font-medium text-slate-500 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
-                                                    Tổng: {formatMoney(totalSpent)}
+                                                <span className="text-sm font-bold text-slate-700 bg-white px-4 py-1.5 rounded-full border border-slate-200 shadow-sm">
+                                                    Tổng cộng: <span className="text-blue-600">{formatMoney(totalSpent)}</span>
                                                 </span>
                                             </div>
 
@@ -714,98 +773,149 @@
                     )}
 
                     {/* ============================================================== */}
-                    {/* GIAO DIỆN BẢN IN PDF (Bình thường ẩn, chỉ hiện khi in ấn) */}
+                    {/* NÂNG CẤP: GIAO DIỆN BẢN IN PDF (Minimalist Invoice Style) */}
                     {/* ============================================================== */}
-                    <div className="hidden print:block text-black bg-white">
+                    <div className="hidden print:block text-slate-800 bg-white font-sans">
+                        
                         {/* Trang 1: Summary */}
-                        <div className="p-8 avoid-break">
-                            <div className="text-center mb-8 border-b-2 border-black pb-4">
-                                <h1 className="text-2xl font-bold uppercase">Báo Cáo Chi Tiêu Chuyến Đi Vũng Tàu</h1>
-                                <p className="text-gray-600 mt-2">Tổng chi phí: <strong className="text-xl text-black">{formatMoney(totalSpent)}</strong></p>
+                        <div className="avoid-break pb-8">
+                            
+                            {/* PDF Header Chuyên Nghiệp */}
+                            <div className="flex justify-between items-end border-b-4 border-slate-900 pb-6 mb-8 mt-4">
+                                <div>
+                                    <h1 className="text-4xl font-black text-slate-900 tracking-tight uppercase">Báo Cáo Tài Chính</h1>
+                                    <p className="text-slate-500 font-medium text-lg mt-1 tracking-wide">CHUYẾN ĐI VŨNG TÀU</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Ngày Xuất Báo Cáo</p>
+                                    <p className="text-lg font-bold text-slate-800">{new Date().toLocaleDateString('vi-VN')}</p>
+                                </div>
                             </div>
 
-                            <h2 className="text-lg font-bold mb-4 uppercase border-l-4 border-black pl-2">1. Thanh Toán Cuối Cùng (Chuyển khoản)</h2>
-                            <table className="w-full text-sm border-collapse border border-gray-300 mb-8">
-                                <thead>
-                                    <tr className="bg-gray-100">
-                                        <th className="border border-gray-300 px-4 py-2 text-left">Người Gửi (Đóng thêm)</th>
-                                        <th className="border border-gray-300 px-4 py-2 text-center"></th>
-                                        <th className="border border-gray-300 px-4 py-2 text-left">Người Nhận (Thu quỹ)</th>
-                                        <th className="border border-gray-300 px-4 py-2 text-right">Số Tiền</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {transfers.map((t, i) => (
-                                        <tr key={i}>
-                                            <td className="border border-gray-300 px-4 py-2 font-semibold">{t.from}</td>
-                                            <td className="border border-gray-300 px-4 py-2 text-center text-gray-500">→</td>
-                                            <td className="border border-gray-300 px-4 py-2 font-semibold">{t.to}</td>
-                                            <td className="border border-gray-300 px-4 py-2 text-right font-bold">{formatMoney(t.amount)}</td>
-                                        </tr>
-                                    ))}
-                                    {transfers.length === 0 && <tr><td colSpan="4" className="border border-gray-300 px-4 py-2 text-center italic">Đã hòa tiền</td></tr>}
-                                </tbody>
-                            </table>
+                            {/* Summary Cards */}
+                            <div className="grid grid-cols-2 gap-6 mb-10">
+                                <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-6">
+                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Tổng Chỉ Phí</p>
+                                    <p className="text-3xl font-bold text-blue-600">{formatMoney(totalSpent)}</p>
+                                </div>
+                                <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-6">
+                                    <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Thủ Quỹ Đại Diện</p>
+                                    <p className="text-3xl font-bold text-slate-800">Duy Kha</p>
+                                </div>
+                            </div>
 
-                            <h2 className="text-lg font-bold mb-4 uppercase border-l-4 border-black pl-2">2. Tổng Hợp Thu Chi Cá Nhân</h2>
-                            <table className="w-full text-sm border-collapse border border-gray-300">
-                                <thead>
-                                    <tr className="bg-gray-100">
-                                        <th className="border border-gray-300 px-4 py-2 text-left">Người</th>
-                                        <th className="border border-gray-300 px-4 py-2 text-right">Đã ứng trước</th>
-                                        <th className="border border-gray-300 px-4 py-2 text-right">Phần đã xài</th>
-                                        <th className="border border-gray-300 px-4 py-2 text-right">Chênh lệch (Dư/Nợ)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {PEOPLE.map((person) => {
-                                        const d = detailedBreakdown[person];
-                                        const net = d.totalPaid - d.totalConsumed;
-                                        return (
-                                            <tr key={person}>
-                                                <td className="border border-gray-300 px-4 py-2 font-bold">{person}</td>
-                                                <td className="border border-gray-300 px-4 py-2 text-right">{formatMoney(d.totalPaid)}</td>
-                                                <td className="border border-gray-300 px-4 py-2 text-right">{formatMoney(d.totalConsumed)}</td>
-                                                <td className="border border-gray-300 px-4 py-2 text-right font-bold">
-                                                    {net > 0 ? `Dư: ${formatMoney(net)}` : net < 0 ? `Nợ: ${formatMoney(Math.abs(net))}` : "Hòa"}
+                            {/* Section 1: Thanh toán cuối cùng */}
+                            <h2 className="text-lg font-bold mb-4 uppercase text-slate-900 flex items-center gap-3">
+                                <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">1</span> 
+                                Chuyển Khoản Trả Quỹ
+                            </h2>
+                            <div className="rounded-xl overflow-hidden border-2 border-slate-200 mb-10">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-slate-900 text-white">
+                                        <tr>
+                                            <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Người Gửi (Nợ)</th>
+                                            <th className="px-6 py-4 text-center font-semibold uppercase tracking-wider text-xs">Trạng Thái</th>
+                                            <th className="px-6 py-4 font-semibold uppercase tracking-wider text-xs">Người Nhận (Quỹ)</th>
+                                            <th className="px-6 py-4 text-right font-semibold uppercase tracking-wider text-xs">Số Tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 bg-white">
+                                        {transfers.map((t, i) => (
+                                            <tr key={i} className="even:bg-slate-50">
+                                                <td className="px-6 py-4 font-bold text-slate-700">{t.from}</td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <span className="text-slate-400 text-xl">→</span>
                                                 </td>
+                                                <td className="px-6 py-4 font-bold text-slate-700">{t.to}</td>
+                                                <td className="px-6 py-4 text-right font-bold text-rose-600 text-base">{formatMoney(t.amount)}</td>
                                             </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
+                                        ))}
+                                        {transfers.length === 0 && (
+                                            <tr><td colSpan="4" className="px-6 py-8 text-center text-slate-500 italic">Không có phát sinh chuyển khoản (Đã hòa tiền)</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Section 2: Chi tiết cá nhân */}
+                            <h2 className="text-lg font-bold mb-4 uppercase text-slate-900 flex items-center gap-3 mt-12">
+                                <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">2</span> 
+                                Đối Soát Thu Chi Cá Nhân
+                            </h2>
+                            <div className="rounded-xl overflow-hidden border-2 border-slate-200">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-slate-100 text-slate-600 border-b-2 border-slate-200">
+                                        <tr>
+                                            <th className="px-6 py-4 font-bold uppercase tracking-wider text-xs">Thành Viên</th>
+                                            <th className="px-6 py-4 text-right font-bold uppercase tracking-wider text-xs">Đã ứng trước (1)</th>
+                                            <th className="px-6 py-4 text-right font-bold uppercase tracking-wider text-xs">Sử dụng (2)</th>
+                                            <th className="px-6 py-4 text-right font-bold uppercase tracking-wider text-xs">Kết quả (1 - 2)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 bg-white">
+                                        {PEOPLE.map((person) => {
+                                            const d = detailedBreakdown[person];
+                                            const net = d.totalPaid - d.totalConsumed;
+                                            return (
+                                                <tr key={person} className="even:bg-slate-50">
+                                                    <td className="px-6 py-4 font-black text-slate-800 text-base">{person}</td>
+                                                    <td className="px-6 py-4 text-right text-emerald-600 font-medium">{formatMoney(d.totalPaid)}</td>
+                                                    <td className="px-6 py-4 text-right text-slate-600 font-medium">{formatMoney(d.totalConsumed)}</td>
+                                                    <td className="px-6 py-4 text-right font-black text-base">
+                                                        {net > 0 ? <span className="text-emerald-600">Dư: {formatMoney(net)}</span> 
+                                                        : net < 0 ? <span className="text-rose-600">Nợ: {formatMoney(Math.abs(net))}</span> 
+                                                        : <span className="text-slate-400">Hòa</span>}
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         {/* Trang 2: Chi tiết các hóa đơn */}
-                        <div className="p-8 page-break">
-                            <h2 className="text-lg font-bold mb-4 uppercase border-l-4 border-black pl-2">3. Danh Sách Hóa Đơn Gốc</h2>
-                            <table className="w-full text-sm border-collapse border border-gray-300">
-                                <thead>
-                                    <tr className="bg-gray-100">
-                                        <th className="border border-gray-300 px-2 py-2 w-10 text-center">STT</th>
-                                        <th className="border border-gray-300 px-2 py-2 text-left">Tên Khoản Chi</th>
-                                        <th className="border border-gray-300 px-2 py-2 text-left">Người Trả</th>
-                                        <th className="border border-gray-300 px-2 py-2 text-right">Số Tiền</th>
-                                        <th className="border border-gray-300 px-2 py-2 text-left">Ghi chú</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {expenses.map((exp, index) => (
-                                        <tr key={exp.id}>
-                                            <td className="border border-gray-300 px-2 py-2 text-center">{index + 1}</td>
-                                            <td className="border border-gray-300 px-2 py-2 font-medium">{exp.name}</td>
-                                            <td className="border border-gray-300 px-2 py-2">{exp.payer}</td>
-                                            <td className="border border-gray-300 px-2 py-2 text-right font-bold">{formatMoney(exp.amount)}</td>
-                                            <td className="border border-gray-300 px-2 py-2 text-xs text-gray-600">{exp.note}</td>
+                        <div className="p-8 page-break pt-12">
+                            <h2 className="text-lg font-bold mb-4 uppercase text-slate-900 flex items-center gap-3">
+                                <span className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm">3</span> 
+                                Danh Sách Hóa Đơn Gốc
+                            </h2>
+                            <div className="rounded-xl overflow-hidden border-2 border-slate-200">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-slate-900 text-white">
+                                        <tr>
+                                            <th className="px-4 py-4 w-12 text-center font-semibold uppercase text-xs">#</th>
+                                            <th className="px-4 py-4 font-semibold uppercase text-xs">Hạng Mục</th>
+                                            <th className="px-4 py-4 font-semibold uppercase text-xs">Người Trả</th>
+                                            <th className="px-4 py-4 text-right font-semibold uppercase text-xs w-32">Số Tiền</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <div className="mt-8 text-center text-xs text-gray-400 italic">
-                                Báo cáo xuất tự động lúc {new Date().toLocaleString('vi-VN')}
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 bg-white">
+                                        {expenses.map((exp, index) => (
+                                            <tr key={exp.id} className="even:bg-slate-50">
+                                                <td className="px-4 py-4 text-center font-bold text-slate-400">{index + 1}</td>
+                                                <td className="px-4 py-4">
+                                                    <div className="font-bold text-slate-800">{exp.name}</div>
+                                                    <div className="text-xs text-slate-500 mt-1 max-w-[300px]">{exp.note}</div>
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    <span className="bg-slate-200 px-2 py-1 rounded text-xs font-bold text-slate-700">{exp.payer}</span>
+                                                </td>
+                                                <td className="px-4 py-4 text-right font-black text-blue-600">{formatMoney(exp.amount)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            {/* Footer */}
+                            <div className="mt-16 text-center text-sm text-slate-400 border-t border-slate-200 pt-6">
+                                <p>Báo cáo được kết xuất tự động từ hệ thống quản lý chi tiêu nội bộ.</p>
+                                <p className="mt-1">Mọi thắc mắc vui lòng liên hệ thủ quỹ.</p>
                             </div>
                         </div>
                     </div>
+
                 </div>
             );
         }
